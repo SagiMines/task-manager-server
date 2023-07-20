@@ -8,3 +8,4 @@
 /logs
 /fastcgi_temp
 /client_body_temp
+/env_config.conf

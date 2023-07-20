@@ -3,6 +3,7 @@ local lapis = require("lapis")
 local app = lapis.Application()
 local task_routes = require("routes.task_routes")
 
+-- task routes
 app:post("/task", task_routes.create_task)
 app:get("/tasks", task_routes.retrieve_all_tasks)
 app:get("/task/:id", task_routes.retrieve_specific_task)
