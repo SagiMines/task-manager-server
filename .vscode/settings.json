@@ -1,0 +1,5 @@
+{
+  "Lua.runtime.version": "LuaJIT",
+  "Lua.workspace.library": ["${3rd}/OpenResty/library"],
+  "Lua.diagnostics.disable": ["need-check-nil"]
+}

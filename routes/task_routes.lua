@@ -1,31 +1,63 @@
+local Task = require("models.task")
 local TaskRoutes = {}
 
+-- POST: /task
 function TaskRoutes.create_task(self)
-  -- Your code to handle creating a new task
-  return { json = { message = "New task created" } }
+  local res = Task:create(self.POST)
+  if not res then
+    error("Could not create a new task.")
+  end
+
+  return { json = res }
 end
 
+-- GET: /tasks
 function TaskRoutes.retrieve_all_tasks(self)
-  -- Your code to handle retrieving all tasks
-  return { json = { message = "All tasks retrieved" } }
+  local res = Task:select()
+  if not res then
+    error("There are no tasks available.")
+  end
+
+  return {json = res}
 end
 
+-- GET: /task/:id
 function TaskRoutes.retrieve_specific_task(self)
   local task_id = self.params.id
-  -- Your code to handle retrieving the task with the given task_id
-  return { json = { message = "Task " .. task_id .. " retrieved" } }
+  local res = Task:find(task_id)
+  if not res then
+    error("No such task exists with the id of: " .. task_id)
+  end
+
+  return {json = res}
 end
 
+-- PUT: /task/:id
 function TaskRoutes.update_specific_task(self)
   local task_id = self.params.id
-  -- Your code to handle updating the task with the given task_id
-  return { json = { message = "Task " .. task_id .. " updated" } }
+  
+  local task = Task:find(task_id)
+  if not task then
+    error("No such task exists with the id of: " .. task_id)
+  end
+
+  task:update(self.POST)
+
+  return { json = task }
 end
 
+-- DELETE: /task/:id
 function TaskRoutes.delete_specific_task(self)
   local task_id = self.params.id
-  -- Your code to handle deleting the task with the given task_id
-  return { json = { message = "Task " .. task_id .. " deleted" } }
+  
+  local task = Task:find(task_id)
+  if not task then
+    error("No such task exists with the id of: " .. task_id)
+  end
+
+  task:delete()
+
+  return { json = task }
 end
 
 return TaskRoutes
