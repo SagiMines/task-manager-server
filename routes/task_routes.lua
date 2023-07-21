@@ -4,6 +4,7 @@ local TaskRoutes = {}
 -- POST: /task
 function TaskRoutes.create_task(self)
   local res = Task:create(self.POST)
+  -- add check if user exists
   if not res then
     error("Could not create a new task.")
   end
@@ -13,7 +14,13 @@ end
 
 -- GET: /tasks
 function TaskRoutes.retrieve_all_tasks(self)
-  local res = Task:select()
+  local res
+  local userId = self.GET.userId
+  if userId then
+    res = Task:select('where "userId" = ?', userId)
+  else
+    res = Task:select()
+  end
   if not res then
     error("There are no tasks available.")
   end
