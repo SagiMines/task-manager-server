@@ -7,11 +7,12 @@ local Task = Model:extend("tasks", {
     { "id", "number" },
     { "title", "text" },
     { "description", "text" },
-    { "completed", "boolean" }
+    { "completed", "boolean" },
+    { "userId", "number" },
   },
 
   relations = {
-    -- Define any relations if needed
+    {"userId", belongs_to = "User"}
   }
 })
 
