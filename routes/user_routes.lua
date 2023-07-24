@@ -1,6 +1,7 @@
 local User = require("models.user")
 local bcrypt = require("bcrypt")
 local jwt = require("utils.jwt")
+local json = require('cjson')
 local UserRoutes = {}
 
 -- POST: /users
@@ -30,8 +31,15 @@ end
 
 -- POST: /auth
 function UserRoutes.authenticate_user(self)
-    local username = self.POST.username
-    local password = self.POST.password
+    local keys = {}
+    for key, _ in pairs(self.POST) do
+    table.insert(keys, key)
+    end
+    local decodedBody = json.decode(keys[1])
+    local username = decodedBody.username
+    local password = decodedBody.password
+    print(username)
+    print(password)
     if type(username) == "string" and type(password) == "string" then
         local isUserExists = User:find({username = username})
         if isUserExists then
@@ -49,17 +57,16 @@ function UserRoutes.authenticate_user(self)
 
                 if err then
                     -- Failed to create the JWT
-                    error("Error creating JWT: ", err)
-                    return
+                    return {status = 400, json = {error = "Bad Request: " .. err}}
                 end
 
                 return {json = {token = token}}
             end
         else
-            error("User does not exists.")
+            return {status = 404, json = {error = "Invalid username or password"}}
         end  
     end
-    error("Invalid credentials")
+    return {status = 400, json = {error = "Invalid credentials"}}
 end
 
 return UserRoutes
