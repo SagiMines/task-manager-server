@@ -1,7 +1,7 @@
 local User = require("models.user")
 local bcrypt = require("bcrypt")
 local jwt = require("utils.jwt")
-local json = require('cjson')
+local helper_functions = require("utils.helper_functions")
 local UserRoutes = {}
 
 -- POST: /users
@@ -9,10 +9,10 @@ function UserRoutes.create_user(self)
     local username = self.POST.username
     local password = self.POST.password
     if type(username) == "string" and type(password) == "string" then
-        -- check if there is not another user with the same username
+        -- check if there isn't another user with the same username
         local isUserExists = User:find({username = username})
         if isUserExists then
-            error("A user with the same username already exists.")
+            return {status = 400, json = {"A user with the same username already exists."}}
         end
 
         -- hash the password
@@ -21,25 +21,30 @@ function UserRoutes.create_user(self)
         local res = User:create(self.POST)
 
         if not res then
-          error("Could not create a new user.")
+          return {status = 409, json = {error = "Could not create a new user."}}
         end
       
-        return { json = res } 
+        return {status = 200, json = res } 
     end
-    error("Invalid credentials")
+    return {status = 401, json = {error = "Invalid credentials"}}
+end
+
+-- POST: /check-token
+function UserRoutes.check_token(self)
+    local res
+    if(self.cookies.token) then
+        res = jwt.verify_token(self.cookies.token,os.getenv("JWT_SECRET"))
+        return {status = 200, json = {userId = res[2].payload.id}}
+    else
+        return {status = 404, json = {userId = nil}}
+    end
 end
 
 -- POST: /auth
 function UserRoutes.authenticate_user(self)
-    local keys = {}
-    for key, _ in pairs(self.POST) do
-    table.insert(keys, key)
-    end
-    local decodedBody = json.decode(keys[1])
+    local decodedBody = helper_functions.get_decoded_request_body(self.POST)
     local username = decodedBody.username
     local password = decodedBody.password
-    print(username)
-    print(password)
     if type(username) == "string" and type(password) == "string" then
         local isUserExists = User:find({username = username})
         if isUserExists then
@@ -54,13 +59,15 @@ function UserRoutes.authenticate_user(self)
                 local expiration = ngx.time() + (365 * 24 * 60 * 60)
                 -- Create the JWT
                 local token, err = jwt.create_token(payload, os.getenv("JWT_SECRET"), "HS256", expiration)
-
                 if err then
                     -- Failed to create the JWT
                     return {status = 400, json = {error = "Bad Request: " .. err}}
                 end
-
-                return {json = {token = token}}
+                
+                -- setting a secure http only cookie
+                self.cookies.token = token
+                local verify_jwt = jwt.verify_token(token,os.getenv("JWT_SECRET"))
+                return {status = 200, json = {userId = verify_jwt[2].payload.id}}
             end
         else
             return {status = 404, json = {error = "Invalid username or password"}}
