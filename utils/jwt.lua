@@ -1,4 +1,5 @@
 local jwt = require("resty.jwt")
+local date = require("date")
 
 local _M = {}
 
@@ -26,10 +27,16 @@ function _M.verify_token(token, secret_key)
     local claims, err = jwt:verify(secret_key, token)
 
     if not claims then
-        return false, err
+        return {false, err}
     end
 
-    return true, claims
+    return {true, claims}
+end
+
+-- setting up the JWT's cookie attributes
+function _M.set_jwt_cookie(self)
+    local expires = date(true):adddays(365):fmt("${http}")
+    return "Expires=" .. expires .. "; Path=/; HttpOnly; Secure"
 end
 
 return _M
