@@ -27,5 +27,6 @@ app:match("/task/:id", respond_to({
 app:post("/users", user_routes.create_user)
 app:post("/auth",user_routes.authenticate_user)
 app:get("/check-token", user_routes.check_token)
+app:get("/logout", user_routes.logout)
 
 return app
