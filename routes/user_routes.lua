@@ -6,25 +6,58 @@ local UserRoutes = {}
 
 -- POST: /users
 function UserRoutes.create_user(self)
-    local username = self.POST.username
-    local password = self.POST.password
-    if type(username) == "string" and type(password) == "string" then
+    local decodedBody = helper_functions.get_decoded_request_body(self.POST)
+    local username = decodedBody.username
+    local password = decodedBody.password
+    local confirmPassword = decodedBody.password
+    if type(username) == "string" and type(password) == "string" and type(confirmPassword) == 'string' then
+        
+        -- Check if password and cofirm password are equal
+         if(password ~= confirmPassword) then
+            return {status = 400, json = {error = "The 'Confirm Password' section is not equal to the 'Password' section"}}
+        end
+
         -- check if there isn't another user with the same username
         local isUserExists = User:find({username = username})
         if isUserExists then
-            return {status = 400, json = {"A user with the same username already exists."}}
+            return {status = 400, json = {error = "A user with the same username already exists."}}
         end
 
-        -- hash the password
-        self.POST.password = bcrypt.digest(password, os.getenv("HASH_ROUNDS"))
 
-        local res = User:create(self.POST)
+        -- hash the password
+        decodedBody.password = bcrypt.digest(password, os.getenv("HASH_ROUNDS"))
+
+       
+        
+        local res = User:create({username = decodedBody.username, password = decodedBody.password})
 
         if not res then
           return {status = 409, json = {error = "Could not create a new user."}}
         end
       
-        return {status = 200, json = res } 
+
+        -- JWT payload
+        local payload = {
+            id = res.id,
+            username = res.username 
+        }
+        -- 1 year expiration time
+        local expiration = ngx.time() + (365 * 24 * 60 * 60)
+        -- Create the JWT
+        local token, err = jwt.create_token(payload, os.getenv("JWT_SECRET"), "HS256", expiration)
+        if err then
+            -- Failed to create the JWT
+            return {status = 400, json = {error = "Bad Request: " .. err}}
+        end
+        
+        -- setting a secure http only cookie
+        self.cookies.token = token
+        local verify_jwt = jwt.verify_token(token,os.getenv("JWT_SECRET"))
+        if(verify_jwt[1]) then
+            return {status = 200, json = res } 
+        end
+        return {status = 409, json = {error = verify_jwt[2]}}
+        
     end
     return {status = 401, json = {error = "Invalid credentials"}}
 end
