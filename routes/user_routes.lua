@@ -109,5 +109,18 @@ function UserRoutes.authenticate_user(self)
     return {status = 400, json = {error = "Invalid credentials"}}
 end
 
+
+function UserRoutes.logout(self) 
+    local verify_jwt = jwt.verify_token(self.cookies.token,os.getenv("JWT_SECRET"))
+    
+    if(verify_jwt[1]) then
+        ngx.header['Set-Cookie'] = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
+        return {status = 200, json = {done = true}} 
+    end
+    return {status = 400, json = {error = "No token was found."}} 
+
+end
+
+
 return UserRoutes
 
