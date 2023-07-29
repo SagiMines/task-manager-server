@@ -7,7 +7,7 @@ description = {
    homepage = "",
 }
 dependencies = {
-   "lua >= 5.1, < 5.2",
+   "lua >= 5.1, < 5.4",
    "lapis >= 1.14.0-1",
    "bcrypt >= 2.3-1",
    "lua-resty-jwt >= 0.2.3-0",
