@@ -1,5 +1,6 @@
 local json = require('cjson')
 local helper = {}
+-- decodes the request body to a table
 function helper.get_decoded_request_body(requestBody)
     local keys = {}
         for key, _ in pairs(requestBody) do
