@@ -41,3 +41,7 @@ Hashing process (user password hashing):
 JWT creation secret:
 
 `JWT_SECRET`
+
+## Related
+
+[Task Manager Client](https://github.com/SagiMines/task-manager-client)
