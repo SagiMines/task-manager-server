@@ -22,19 +22,14 @@ function UserRoutes.create_user(self)
         if isUserExists then
             return {status = 400, json = {error = "A user with the same username already exists."}}
         end
-
-
+        
         -- hash the password
         decodedBody.password = bcrypt.digest(password, os.getenv("HASH_ROUNDS"))
 
-       
-        
         local res = User:create({username = decodedBody.username, password = decodedBody.password})
-
         if not res then
           return {status = 409, json = {error = "Could not create a new user."}}
         end
-      
 
         -- JWT payload
         local payload = {
@@ -69,7 +64,7 @@ function UserRoutes.check_token(self)
         res = jwt.verify_token(self.cookies.token,os.getenv("JWT_SECRET"))
         return {status = 200, json = {userId = res[2].payload.id}}
     else
-        return {status = 404, json = {userId = nil}}
+        return {status = 200, json = {userId = 0}}
     end
 end
 
